@@ -33,6 +33,16 @@ kubectl create namespace $NAMESPACE 2>/dev/null || echo "Namespace '$NAMESPACE' 
 echo "Kustomize building and applying Kubernetes manifests..."
 kustomize build k8s/ | kubectl apply -f - -n $NAMESPACE
 
+echo "Waiting for the Nginx deployment to be ready..."
+for i in {1..30}; do
+    if kubectl get deployment mynginx -n $NAMESPACE | grep -q "1/1"; then
+        echo "Nginx deployment is ready."
+        break
+    fi
+    echo "Waiting for Nginx deployment to be ready... ($i/30)"
+    sleep 2
+done
+
 echo "Porting Nginx service to localhost:8080..."
 kubectl port-forward svc/mynginx 8080:80 -n $NAMESPACE
 
