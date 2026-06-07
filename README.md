@@ -1,12 +1,11 @@
 ## Project Overview
 
-This repository demonstrates a minimal CI/CD pipeline that builds, tags and releases a custom Nginx-based container image and deploys it to Kubernetes. The goal is to showcase automated releases (semantic versioning), changelog generation, and an environment for local testing.
+This repository demonstrates a minimal CI/CD pipeline that builds, tags and releases a custom Nginx-based container image and deploys it to Kubernetes. The goal is to showcase automated releases, changelog generation, and an environment for local testing.
 
 Contents
 
 - GitHub Actions workflows for release and branch builds
 - `Dockerfile` and Nginx assets for the image
-- `CHANGELOG.md` managed by `git-cliff`
 - Kubernetes manifest(s) under `k8s/` with a Kustomize-friendly layout
 - `localdev.sh` helper for local testing
 
@@ -29,7 +28,7 @@ docker run --rm -p 8080:80 my-nginx:local
 
 Release workflow (main)
 
-- Trigger: a tag push with command like (git tag v1.2.3 git push origin v.1.2.3) pushed to `main`.
+- Trigger: a tag push with commands: (git tag v1.2.3 git push origin v.1.2.3) pushed to `main`.
 - Steps performed by the workflow:
     - Generate a changelog using `git-cliff`
     - Build and publish the Docker image to GitHub Container Registry (GHCR)
@@ -74,7 +73,7 @@ Notes & Improvements
 - For CI performance consider using a self-hosted runner to avoid repeated Rust toolchain installs for `git-cliff`.
 - `.git-cliff.toml` can be added to customize changelog formatting (I can add a sensible default if desired).
 - You may want to make GHCR visibility explicit (public vs private) depending on whether third-party testers should pull images without auth.
-
+- Use github and github Actions is a choice for keep everything in the same enviroiment.
 
 ### Interesting Moments
 

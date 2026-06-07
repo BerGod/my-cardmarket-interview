@@ -8,3 +8,6 @@ images:
     - name: nginx
       newName: ghcr.io/BerGod/my-nginx
       newTag: latest
+
+
+### If you want to use another image instead of the one built by you, you can change the newName and newTag fields to point to the desired image
