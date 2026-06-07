@@ -34,7 +34,7 @@ echo "Kustomize building and applying Kubernetes manifests..."
 kustomize build k8s/ | kubectl apply -f - -n $NAMESPACE
 
 echo "Porting Nginx service to localhost:8080..."
-kubectl port-forward svc/nginx-service 8080:80 -n $NAMESPACE
+kubectl port-forward svc/mynginx 8080:80 -n $NAMESPACE
 
 echo "Local development environment is set up. You can access the Nginx service at http://localhost:8080"
 echo "To stop port forwarding, press Ctrl+C in this terminal."
