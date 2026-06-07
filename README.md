@@ -1,36 +1,82 @@
+## Project Overview
 
-# Interviews
+This repository demonstrates a minimal CI/CD pipeline that builds, tags and releases a custom Nginx-based container image and deploys it to Kubernetes. The goal is to showcase automated releases (semantic versioning), changelog generation, and an environment for local testing.
 
-## This repo contains tasks we request interviewees to complete
+Contents
 
-* This repository should be forked, candidates should work in their own forked versions.
-Please don't open pull requests with solutions agains this repository.
-* No tasks require the use of any paid services.
-* For all of the following tasks please use your favourite tools.
-* During the interview the interviewee guides us through
-their solution. Explaining decisions and technical concepts as we go.
-* Tasks can be solved in a very simplistic way or as complicated as you can imagine.
-Both can be valid.
+- GitHub Actions workflows for release and branch builds
+- `Dockerfile` and Nginx assets for the image
+- `CHANGELOG.md` managed by `git-cliff`
+- Kubernetes manifest(s) under `k8s/` with a Kustomize-friendly layout
+- `localdev.sh` helper for local testing
 
-### k8s deployment
+Requirements
 
-* please don't use cloud infra providers like AWS, GCP etc. The cluster should
-be a local one.
-  
-1. Set up a kubernetes cluster ie. kind, minikube, k3s etc.
-the one you like the most.
-2. Build and release an app. This application should have a dockerfile created
-by you and it should be built by you. This can be something very simple,
-ie traefik/whoami, hashicorp/http-echo, your own if you have one.
-Each release should happen automatically.
-3. Create a deployment of this app.
+- Docker (for local image build/run)
+- Git
+- Minikube
 
-* extras: IaC, GitOps, semver, changelog
+Quick start (local)
 
-### review
+1. Build the image locally:
 
-* please review [shellscript](shell/script.sh)
+```bash
+docker build -t my-nginx:local .
+docker run --rm -p 8080:80 my-nginx:local
+```
 
-* please review [deployment](k8s/nginx.yaml)
+2. Open http://localhost:8080 to verify the app is served.
 
-* extras: proper explanation
+Release workflow (main)
+
+- Trigger: a tag push with command like (git tag v1.2.3 git push origin v.1.2.3) pushed to `main`.
+- Steps performed by the workflow:
+    - Generate a changelog using `git-cliff`
+    - Build and publish the Docker image to GitHub Container Registry (GHCR)
+    - Create a GitHub Release using the changelog
+
+Branch builds (dev images)
+
+- Trigger: pushes to non-`main` branches.
+- Produces a dev-tagged image (example `0.0.1-dev-<run_number>`) published to GHCR for testing by third parties.
+
+Changelog policy
+
+- This repo uses `git-cliff` to produce consistent changelogs from commit history (Conventional Commits recommended).
+
+How external testers can pull images
+
+- Public package (if GHCR package is public):
+
+```bash
+docker pull ghcr.io/<owner>/my-nginx:<tag>
+docker run --rm -p 8080:80 ghcr.io/<owner>/my-nginx:<tag>
+```
+
+- Private package: authenticate using a Personal Access Token (PAT) with `read:packages`:
+
+```bash
+echo "${PAT}" | docker login ghcr.io -u <GH_USERNAME> --password-stdin
+docker pull ghcr.io/<owner>/my-nginx:<tag>
+```
+
+Kubernetes deployment
+
+- The `k8s/nginx.yaml` manifest contains a simple Deployment and Service. Use Kustomize or edit the image reference to point to the desired tag.
+You can use the script localdev.sh for speed up the deployment in local.
+
+```bash
+kubectl apply -k k8s/
+```
+
+Notes & Improvements
+
+- For CI performance consider using a self-hosted runner to avoid repeated Rust toolchain installs for `git-cliff`.
+- `.git-cliff.toml` can be added to customize changelog formatting (I can add a sensible default if desired).
+- You may want to make GHCR visibility explicit (public vs private) depending on whether third-party testers should pull images without auth.
+
+
+### Interesting Moments
+
+https://github.com/orgs/community/discussions/25768
+

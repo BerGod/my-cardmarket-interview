@@ -1,0 +1,51 @@
+name: Branch build — dev image
+
+on:
+  push:
+    # Run for all branches except main
+    branches-ignore: [ main ]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set lowercase owner
+        id: owner
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "owner_lower=$OWNER_LOWER" >> $GITHUB_OUTPUT
+
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ghcr.io/${{ steps.owner.outputs.owner_lower }}/my-nginx:dev-${{ github.run_number }}
+          labels: |
+            org.opencontainers.image.version=dev-${{ github.run_number }}
+      
+      - name: Build and push dev image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ steps.owner.outputs.owner_lower }}/my-nginx:0.0.1-dev-${{ github.run_number }}
