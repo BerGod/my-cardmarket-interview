@@ -47,7 +47,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ steps.owner.outputs.owner_lower }}/my-nginx:${{ github.ref_name }}
+          tags: ghcr.io/${{ steps.owner.outputs.owner_lower }}/my-nginx:${{  steps.vars.outputs.version }}
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
